@@ -145,7 +145,8 @@ namespace GestorHeroes.Controllers
                     ArmaPrincipal = heroe.ArmaPrincipal!,
                     Furia = heroe.Furia ?? 0,
                 };
-            } else if (heroe.Precision.HasValue || heroe.TieneMascota.HasValue)
+            }
+            else if (heroe.Precision.HasValue || heroe.TieneMascota.HasValue)
             {
                 nuevoHeroe = new Arquero
                 {
@@ -157,7 +158,8 @@ namespace GestorHeroes.Controllers
                     Precision = heroe.Precision ?? 0,
                     TieneMascota = heroe.TieneMascota ?? false,
                 };
-            } else if (!string.IsNullOrEmpty(heroe.Deidad) || heroe.PuntosSanacion.HasValue)
+            }
+            else if (!string.IsNullOrEmpty(heroe.Deidad) || heroe.PuntosSanacion.HasValue)
             {
                 nuevoHeroe = new Clerigo
                 {
@@ -169,7 +171,8 @@ namespace GestorHeroes.Controllers
                     Deidad = heroe.Deidad!,
                     PuntosSanacion = heroe.PuntosSanacion ?? 0,
                 };
-            } else if (heroe.Mana.HasValue || !string.IsNullOrEmpty(heroe.ElementoPrincipal))
+            }
+            else if (heroe.Mana.HasValue || !string.IsNullOrEmpty(heroe.ElementoPrincipal))
             {
                 nuevoHeroe = new Mago
                 {
@@ -181,11 +184,12 @@ namespace GestorHeroes.Controllers
                     Mana = heroe.Mana ?? 0,
                     ElementoPrincipal = heroe.ElementoPrincipal!,
                 };
-            } else
+            }
+            else
             {
                 return BadRequest("No se pudo determinar la clase del personaje.");
             }
-            
+
             _context.Personajes.Add(nuevoHeroe);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetHeroe), new { id = nuevoHeroe.Id }, nuevoHeroe);
@@ -225,6 +229,29 @@ namespace GestorHeroes.Controllers
             }
             await _context.SaveChangesAsync();
             return Ok(heroeExistente);
+        }
+
+        // GET: /heroes/filtrar/{filtro}
+        [HttpGet("filtrar/{filtro}")]
+        public async Task<ActionResult> FiltrarHeroes(string filtro)
+        {
+            var personajes = await _context.Personajes
+                .Where(p => p.Rasgos != null && EF.Functions.JsonExists(p.Rasgos, filtro))
+                .ToListAsync();
+            var resultado = personajes.Select(p => ConvertPersonaje(p));
+            return Ok(resultado);
+
+        }
+
+        // GET: /heroes/busqueda
+        [HttpGet("busqueda")]
+        public async Task<ActionResult> BuscarHeroes()
+        {
+            var personajes = await _context.Personajes
+                .Where(p => (p is Mago || p is Clerigo) && p.Nivel > 50).OrderBy(p => p.FechaCreacion)
+                .ToListAsync();
+            var resultado = personajes.Select(p => ConvertPersonaje(p));
+            return Ok(resultado);
         }
     }
 }
