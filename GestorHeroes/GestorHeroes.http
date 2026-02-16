@@ -1,0 +1,6 @@
+@GestorHeroes_HostAddress = http://localhost:5082
+
+GET {{GestorHeroes_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
